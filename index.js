@@ -1,18 +1,16 @@
-﻿var fs = require("fs");
+﻿﻿var fs = require("fs");
 function build(path,outputpath){
     var output = "(function(){"+
-		"function use(){"+
-			"for(var i = 0; i < arguments.length; i++){"+
-				"var obj = arguments[i];"+
-				"this.__usings.push(obj);"+
-			"}"+
+		"function use(ns,name,f){"+
+			"var s = {usings:[ns]};"+
+			"use.h.push(s);"+
+			"ns[name]=f.call(s,function(){"+
+				"for(var i = 0; i < arguments.length; i++){"+
+					"s.usings.push(arguments[i]);"+
+				"}"+
+			"});"+
 		"};"+
-		"function m(s,p){"+
-			"h.push(s);"+
-			"s.__usings = [p];"+
-			"return function(){use.apply(s,Array.prototype.slice.call(arguments,0));}"+
-		"}"+
-		"var h=[],c;";
+		"use.h=[];";
 
 	var search = [{path:path,namespace:""}];
     var files = [];
@@ -24,18 +22,16 @@ function build(path,outputpath){
 			var f = fs.readdirSync(s.path);
 			for(var j = 0; j < f.length; j++){
 				if(fs.statSync(s.path+f[j]).isFile()){
-					files.push("c="+s.namespace.substr(0,s.namespace.length-1)+";"+
-					"c."+f[j].replace(".js","")+"=new function(){"+	
+					files.push("use("+s.namespace.substr(0,s.namespace.length-1)+",'"+f[j].replace(".js","")+"',function(use){"+
 						"with(this){"+
-							"var use=m(this,c);"+
 							"return (function(){"+
 								fs.readFileSync(s.path+f[j])+"\r\n"+
 								"return out;"+
 							"})();"+
 						"}"+
-					"};");
+					"});");
 				}else{
-					namespaces.push("if(!this."+s.namespace+f[j]+"){"+s.namespace+f[j]+"={};}");
+					namespaces.push("try{"+s.namespace+f[j]+".x;}catch(e){"+s.namespace+f[j]+"={};}");
 					nextsearch.push({path:s.path+f[j]+"/",namespace:s.namespace+f[j]+"."});
 				}
 			}
@@ -49,14 +45,16 @@ function build(path,outputpath){
         output += files[i];
     }
 	output += 
-		"for(var i = 0; i < h.length; i++){"+
-			"var u = h[i].__usings;"+
-			"for(var j = 0; j < u.length; j++){"+
-				"for(var a in u[j]){"+
-					"h[i][a] = u[j][a];"+
+		"(function(){"+
+			"for(var i = 0; i < use.h.length; i++){"+
+				"var u = use.h[i].usings;"+
+				"for(var j = 0; j < u.length; j++){"+
+					"for(var a in u[j]){"+
+						"use.h[i][a] = u[j][a];"+
+					"}"+
 				"}"+
 			"}"+
-		"}"+
+		"})();"+
 	"})();";
     
     if(outputpath){
