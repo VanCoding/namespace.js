@@ -1,5 +1,7 @@
 ﻿﻿var fs = require("fs");
-function build(path,outputpath){
+var modes = ["+","-"];
+
+function build(mode,path,outputpath){
     var output = "(function(){"+
 		"function use(ns,name,f){"+
 			"var s = {usings:[ns]};"+
@@ -8,11 +10,16 @@ function build(path,outputpath){
 				"for(var i = 0; i < arguments.length; i++){"+
 					"s.usings.push(arguments[i]);"+
 				"}"+
+				"return ns;"+
 			"});"+
 		"};"+
 		"use.h=[];";
 
 	var search = [{path:path,namespace:""}];
+	path = [].concat(path);
+	for(var i = 0; i < path.length; i++){
+		search.push({path:path[i],namespace:""});
+	}
     var files = [];
     var namespaces = [];
 	while(search.length){
@@ -21,18 +28,28 @@ function build(path,outputpath){
 			var s = search[i];
 			var f = fs.readdirSync(s.path);
 			for(var j = 0; j < f.length; j++){
-				if(fs.statSync(s.path+f[j]).isFile()){
-					files.push("use("+s.namespace.substr(0,s.namespace.length-1)+",'"+f[j].replace(".js","")+"',function(use){"+
-						"with(this){"+
-							"return (function(){"+
-								fs.readFileSync(s.path+f[j])+"\r\n"+
-								"return out;"+
-							"})();"+
-						"}"+
-					"});");
-				}else{
-					namespaces.push("try{"+s.namespace+f[j]+".x;}catch(e){"+s.namespace+f[j]+"={};}");
-					nextsearch.push({path:s.path+f[j]+"/",namespace:s.namespace+f[j]+"."});
+				var real = f[j];
+				var virtual = real;
+				if(f[j].indexOf(mode) == 0){
+					for(var y = 0; y < modes.length; y++){
+						if(virtual.indexOf(modes[y]) == 0){
+							virtual = virtual.substr(modes[y].length);
+							break;
+						}
+					}
+					if(fs.statSync(s.path+f[j]).isFile()){						
+						files.push("use("+s.namespace.substr(0,s.namespace.length-1)+",'"+virtual.replace(".js","")+"',function(use){"+
+							"with(this){"+
+								"return (function(){"+
+									fs.readFileSync(s.path+real)+"\r\n"+
+									"return out;"+
+								"})();"+
+							"}"+
+						"});");
+					}else if(namespaces.indexOf(s.namespace+virtual) == -1){
+						namespaces.push("try{"+s.namespace+virtual+".x;}catch(e){"+s.namespace+virtual+"={};}");
+						nextsearch.push({path:s.path+real+"/",namespace:s.namespace+virtual+"."});
+					}
 				}
 			}
 		}
@@ -61,7 +78,19 @@ function build(path,outputpath){
         fs.writeFileSync(outputpath,output);
     }    
 	return output;
-
 }
-module.exports = build;
+
+
+function buildAll(path,outpath){
+	return build("",path,outpath);
+}
+buildAll.buildAll = buildAll;
+buildAll.buildClient = function(path,outpath){
+	return build("+",path,outpath);
+}
+buildAll.buildServer = function(path,outpath){
+	return build("-",path,outpath);
+}
+
+module.exports = buildAll;
 
