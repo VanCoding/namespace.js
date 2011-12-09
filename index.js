@@ -30,7 +30,7 @@ function build(mode,path,outputpath){
 			for(var j = 0; j < f.length; j++){
 				var real = f[j];
 				var virtual = real;
-				if(f[j].indexOf(mode) == 0){
+				if(virtual[0] == mode || modes.indexOf(virtual[0]) == -1){
 					for(var y = 0; y < modes.length; y++){
 						if(virtual.indexOf(modes[y]) == 0){
 							virtual = virtual.substr(modes[y].length);
