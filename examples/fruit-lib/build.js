@@ -1,0 +1,1 @@
+require("namespace").buildAll(__dirname+"/src/",__dirname+"/build/fruits.js");
