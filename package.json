@@ -1,0 +1,16 @@
+{
+	"name": "namespace.js",
+	"description": " a library to create good structured javascript frameworks",
+	"version": "0.1",
+	"author": "Patrik Stutz",
+	"repository": "https://VanCoding@github.com/VanCoding/namespace.js",
+	"maintainers": [ 
+		{ "name": "Patrik Stutz", "email": "patrik.stutz@gmail.com"  }
+	],
+	"contributors": [ 
+		{ "name": "Patrik Stutz", "email": "patrik.stutz@gmail.com"  }
+	],
+	"keywords": ["library","javascript","framework","build","namespace"],
+	"main": "lib/index.js",
+	"engines": { "node": ">= 0.4.0" }
+}
