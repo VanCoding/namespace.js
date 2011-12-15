@@ -4,7 +4,7 @@ var modes = ["+","-"];
 function build(mode,path,outputpath){
     var output = "(function(){";
 
-	var search = [{path:path,namespace:""}];
+	var search = [];
 	path = [].concat(path);
 	for(var i = 0; i < path.length; i++){
 		search.push({path:path[i],namespace:""});
@@ -16,6 +16,7 @@ function build(mode,path,outputpath){
 		for(var i = 0; i < search.length; i++){
 			var s = search[i];
 			var f = fs.readdirSync(s.path);
+			
 			for(var j = 0; j < f.length; j++){
 				var real = f[j];
 				var virtual = real;
@@ -40,6 +41,7 @@ function build(mode,path,outputpath){
     for(var i = 0; i < namespaces.length; i++){
         output += namespaces[i];
     }
+	
     for(var i = 0; i < files.length; i++){
         output += files[i];
     }
@@ -53,8 +55,8 @@ function build(mode,path,outputpath){
 
 function buildFile(path,ns,name){
 	var out = "";
-	var f = (require("fs").readFileSync(path))+"";
-
+	var f = (require("fs").readFileSync(path))+"";	
+	
 	for(var i = 0; i < f.length && i >= 0;){
 		switch(f.substr(i,2)){		
 			case "//":
@@ -122,6 +124,8 @@ function buildFile(path,ns,name){
 	out += "{"+ns+"."+name+"=(function(){";
 	out += parts.join(";");
 	out += ";return out;})();}";
+	
+
     
 	return out;
 }
